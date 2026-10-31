@@ -185,7 +185,7 @@ const T = {
     newName: 'Name (e.g. Stoli Crushed Mango)', newSize: 'Size (e.g. 750 ml, 1 L)', newType: 'Type', newKind: 'Liquor type…', newKindNeed: 'Pick the liquor type.', newCode: 'Code',
     newSave: 'Add and count', cancel: 'Cancel', newNeed: 'Type the product name.', newSimilar: 'Is it one of these? Tap it to avoid a duplicate:',
     mods: { '': 'All', Latas: 'Cans', Barril: 'Kegs', Licor: 'Liquor', Mixer: 'Mixers', Comida: 'Food' },
-    areas: { 'Cuarto frío': 'Walk-in cooler', 'Barra': 'Bar', 'Cocina': 'Kitchen', 'Coolers': 'Coolers', 'Nuevos': 'New products', 'Más de Square': 'More from Square', 'Alta en la app': 'Added in the app' },
+    areas: { 'Cuarto frío': 'Walk-in cooler', 'Barra': 'Bar', 'Cocina': 'Kitchen', 'Coolers': 'Coolers', 'Nuevos': 'New products', 'Más de Square': 'More from Square', 'Alta en la app': 'Added in the app', 'Nuevos de Square': 'New in Square' },
     fields: {
       Latas: ['Coolers', 'Walk-in cooler'], Barril: ['Full kegs (walk-in)'],
       Licor: ['Bar (sealed)', 'Storage (sealed)', 'Open (half = 0.5)'], Mixer: ['Bar (sealed)', 'Storage (sealed)', 'Open (half = 0.5)'],
@@ -523,7 +523,7 @@ function cargar(fecha) {
     $('fecha').value = S.dia; $('semana').textContent = T[L].week(fmt(S.fecha));
     try { Object.assign(S.cola, JSON.parse(ls.get('cm_cola') || '{}')); } catch(e) {}
     $('login').hidden = true; $('app').hidden = false; $('quienlbl').textContent = S.quien;
-    armarFiltros(); pintar(); medir(); cargarUsados();
+    armarFiltros(); pintar(); medir(); cargarNuevosSq(); cargarUsados();
   }).catch(e => {
     $('entrar').disabled = false;
     $('loginmsg').innerHTML = '<div class="msg err">' + errTxt(e) + '</div>';
@@ -542,6 +542,17 @@ function cargarUsados() {
   fetch('usados.json?' + Date.now(), { cache: 'no-store' }).then(r => r.ok ? r.json() : null).then(u => {
     if (!u || !u.ids) return;
     S.usados = u; $('usadosrow').hidden = false; $('usados').checked = S.soloUsados; infoUsados(); pintar(); medir();
+  }).catch(() => {});
+}
+// productos que se dieron de alta en Square y la app todavía no tiene (los publica lista_usados.py)
+function cargarNuevosSq() {
+  fetch('nuevos_square.json?' + Date.now(), { cache: 'no-store' }).then(r => r.ok ? r.json() : null).then(u => {
+    if (!u || !u.productos || !u.productos.length) return;
+    const ya = new Set(S.productos.map(p => p[0]));
+    const nv = u.productos.filter(p => !ya.has(p[0]) && !ALIAS[p[0]]);
+    S.productos = S.productos.concat(nv.map(p => enIngles(corregir(p.slice(0, 6)))));
+    nv.forEach(p => { const c = limpio(p[6]); if (c && !S.codigos[c]) S.codigos[c] = [p[0]]; });
+    if (nv.length) { armarFiltros(); pintar(); }
   }).catch(() => {});
 }
 function infoUsados() { if (!S.usados) return; const [f, h] = S.usados.generado.split(' '); $('usadosinfo').textContent = T[L].soldInfo(fmt(f) + ' ' + h); }
@@ -701,7 +712,9 @@ function resultado(raw) {
     <div class="sheetbtns"><button class="btn light" id="sh_scan" style="border:1px solid var(--navy)">${esc(t('another'))}</button><button class="btn" id="sh_close">${esc(t('ready'))}</button></div>`);
   const lista = () => {
     const q = $('sh_q').value.trim();
-    const vis = S.productos.filter(p => p[1] !== 'Barril' && coincide(p, q)).slice(0, 30);
+    // sin búsqueda, primero lo recién dado de alta en Square (lo más probable al escanear algo nuevo)
+    const vis = S.productos.filter(p => p[1] !== 'Barril' && coincide(p, q))
+      .sort((a, b) => q ? 0 : (b[2] === 'Nuevos de Square') - (a[2] === 'Nuevos de Square')).slice(0, 30);
     $('sh_list').innerHTML = vis.map(p => `<button class="pick" data-id="${esc(p[0])}">${esc(p[3])}<small>${esc([modName(p[1]), p[4], p[0]].filter(Boolean).join(' · '))}</small></button>`).join('');
     $('sh_list').querySelectorAll('.pick').forEach(b => b.onclick = () => aprender(raw, b.dataset.id));
   };
