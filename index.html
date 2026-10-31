@@ -117,6 +117,7 @@
       <select id="area" aria-label="Area"></select>
       <input id="q" type="search">
     </div>
+    <div class="row" id="usadosrow" hidden><label class="sw"><input type="checkbox" id="usados"> <span data-t="onlySold"></span></label><small id="usadosinfo" style="margin-left:auto;opacity:.7"></small></div>
     <div class="row"><label class="sw"><input type="checkbox" id="solo"> <span data-t="onlyLeft"></span></label><button class="chip" id="nuevobtn" type="button" style="margin-left:auto" data-t="newBtn"></button></div>
   </div>
   <main id="lista"></main>
@@ -144,7 +145,7 @@ const T = {
   es: {
     loginTitle: 'Conteo semanal', loginSub: 'Lo que captures aquí llega al libro 09 (hoja Conteo) cuando le das Actualizar todo.',
     name: 'Tu nombre', enter: 'Entrar', needBoth: 'Escribe tu nombre y el PIN.', noConn: 'No se pudo conectar', badPin: 'PIN incorrecto',
-    title: 'Conteo semanal', week: m => `Semana del lunes ${m}`, search: 'Buscar producto', onlyLeft: 'Solo lo que falta contar',
+    title: 'Conteo semanal', week: m => `Semana del lunes ${m}`, search: 'Buscar producto', onlyLeft: 'Solo lo que falta contar', onlySold: 'Solo lo que se vendió desde el último conteo', soldInfo: f => `lista del ${f}`,
     allAreas: 'Todas las áreas', nothing: 'Nada que mostrar con estos filtros.', more: 'Hay más productos: usa la búsqueda o el filtro de área.',
     counted: (h, t) => `${h} de ${t} contados`, toSend: n => `${n} por enviar`, allSent: 'todo enviado',
     saved: '✓ guardado', saving: 'guardando…', offline: 'sin conexión, reintento', openRange: 'Abierta: 0 a 10',
@@ -169,7 +170,7 @@ const T = {
   en: {
     loginTitle: 'Weekly count', loginSub: 'What you enter here reaches workbook 09 (Conteo sheet) when you run Refresh All.',
     name: 'Your name', enter: 'Sign in', needBoth: 'Enter your name and the PIN.', noConn: 'Could not connect', badPin: 'Wrong PIN',
-    title: 'Weekly count', week: m => `Week of Monday ${m}`, search: 'Search product', onlyLeft: 'Only what is left to count',
+    title: 'Weekly count', week: m => `Week of Monday ${m}`, search: 'Search product', onlyLeft: 'Only what is left to count', onlySold: 'Only what sold since the last count', soldInfo: f => `list from ${f}`,
     allAreas: 'All areas', nothing: 'Nothing to show with these filters.', more: 'More products: use search or the area filter.',
     counted: (h, t) => `${h} of ${t} counted`, toSend: n => `${n} to send`, allSent: 'all sent',
     saved: '✓ saved', saving: 'saving…', offline: 'offline, retrying', openRange: 'Open: 0 to 10',
@@ -461,7 +462,8 @@ const NUEVOS = [
   ["LIC-0424", "Licor", "Más de Square", "Yellowstone Toasted", "Whiskey/Scotch", "botella", ""]
 ];
 const capLocal = f => { try { return JSON.parse(ls.get('cm_cap|' + f) || '{}'); } catch (e) { return {}; } };
-const S = { codigos:{}, pin:'', quien:'', fecha:'', dia:'', productos:[], cap:{}, mod:'', area:'', q:'', solo:false, cola:{}, timers:{}, estado:{} };
+function ls0(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+const S = { codigos:{}, pin:'', quien:'', fecha:'', dia:'', productos:[], cap:{}, mod:'', area:'', q:'', solo:false, usados:null, soloUsados:ls0('cm_usados') !== '0', cola:{}, timers:{}, estado:{} };
 const $ = id => document.getElementById(id);
 const ls = { get(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }, set(k,v){ try{ localStorage.setItem(k,v); }catch(e){} } };
 let L = ls.get('cm_lang') || ((navigator.language || 'es').toLowerCase().startsWith('es') ? 'es' : 'en');
@@ -478,6 +480,7 @@ function aplicarIdioma() {
   // status labels already shown follow the new language
   Object.keys(S.estado).forEach(id => { const k = S.estado[id][2]; if (k) S.estado[id][1] = t(k); });
   if (S.fecha) $('semana').textContent = T[L].week(fmt(S.fecha));
+  infoUsados();
   if (!$('app').hidden) { armarFiltros(); pintar(); medir(); }
 }
 document.querySelectorAll('[data-lang]').forEach(b => b.onclick = () => { L = L === 'es' ? 'en' : 'es'; ls.set('cm_lang', L); aplicarIdioma(); });
@@ -520,7 +523,7 @@ function cargar(fecha) {
     $('fecha').value = S.dia; $('semana').textContent = T[L].week(fmt(S.fecha));
     try { Object.assign(S.cola, JSON.parse(ls.get('cm_cola') || '{}')); } catch(e) {}
     $('login').hidden = true; $('app').hidden = false; $('quienlbl').textContent = S.quien;
-    armarFiltros(); pintar(); medir();
+    armarFiltros(); pintar(); medir(); cargarUsados();
   }).catch(e => {
     $('entrar').disabled = false;
     $('loginmsg').innerHTML = '<div class="msg err">' + errTxt(e) + '</div>';
@@ -533,6 +536,16 @@ $('fecha').onchange = () => { if (!$('fecha').value) return; S.dia = $('fecha').
 $('q').oninput = () => { S.q = $('q').value.trim(); pintar(); };
 $('area').onchange = () => { S.area = $('area').value; pintar(); };
 $('solo').onchange = () => { S.solo = $('solo').checked; pintar(); };
+$('usados').onchange = () => { S.soloUsados = $('usados').checked; ls.set('cm_usados', S.soloUsados ? '1' : '0'); pintar(); };
+// lista de lo que se vendió desde el último conteo de cada producto (la publica lista_usados.py junto a la app)
+function cargarUsados() {
+  fetch('usados.json?' + Date.now(), { cache: 'no-store' }).then(r => r.ok ? r.json() : null).then(u => {
+    if (!u || !u.ids) return;
+    S.usados = u; $('usadosrow').hidden = false; $('usados').checked = S.soloUsados; infoUsados(); pintar(); medir();
+  }).catch(() => {});
+}
+function infoUsados() { if (!S.usados) return; const [f, h] = S.usados.generado.split(' '); $('usadosinfo').textContent = T[L].soldInfo(fmt(f) + ' ' + h); }
+function enLista(id) { return !S.usados || !S.soloUsados || id in S.usados.ids || contado(id); }
 
 function armarFiltros() {
   const m = $('mods'); m.innerHTML = '';
@@ -549,7 +562,7 @@ function contado(id){ const c = S.cap[id]; return !!c && [c[0],c[1],c[2]].some(v
 function pintar() {
   const Lst = $('lista'); Lst.innerHTML = '';
   const vis = S.productos.filter(p => (!S.mod || p[1] === S.mod) && (!S.area || p[2] === S.area)
-      && coincide(p, S.q) && (!S.solo || !contado(p[0])));
+      && coincide(p, S.q) && (!S.solo || !contado(p[0])) && enLista(p[0]));
   if (!vis.length) { Lst.innerHTML = `<div class="empty">${t('nothing')}</div>`; progreso(); return; }
   let grupo = null; const frag = document.createDocumentFragment();
   vis.slice(0, 400).forEach(p => {
@@ -612,7 +625,8 @@ setInterval(() => { Object.keys(S.cola).forEach(enviar); }, 15000);
 window.addEventListener('online', () => Object.keys(S.cola).forEach(enviar));
 
 function progreso() {
-  const total = S.productos.length, hechos = S.productos.filter(p => contado(p[0])).length;
+  const base = S.productos.filter(p => enLista(p[0]));
+  const total = base.length, hechos = base.filter(p => contado(p[0])).length;
   $('prog').textContent = T[L].counted(hechos, total);
   const pend = Object.keys(S.cola).length; $('pend').textContent = pend ? T[L].toSend(pend) : t('allSent');
   $('barra').style.width = (total ? 100 * hechos / total : 0) + '%';
