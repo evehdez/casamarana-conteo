@@ -156,7 +156,7 @@ const T = {
     searchP: 'Buscar producto', another: 'Escanear otro', ready: 'Listo', learnFail: 'No se pudo guardar el código: ', noLib: 'El lector todavía está cargando; intenta en un momento.', photo: 'Tomar foto del código', photoFail: 'No se leyó el código en la foto. Intenta más cerca y con luz.',
     newBtn: '+ Producto nuevo', notListed: 'No está en la lista: dar de alta', newTitle: 'Dar de alta un producto',
     newSub: 'Escribe el nombre como viene en la etiqueta. Queda dado de alta y lo cuentas de una vez.',
-    newName: 'Nombre (ej. Stoli Crushed Mango)', newSize: 'Tamaño (ej. 750 ml, 1 L)', newType: 'Tipo', newCode: 'Código',
+    newName: 'Nombre (ej. Stoli Crushed Mango)', newSize: 'Tamaño (ej. 750 ml, 1 L)', newType: 'Tipo', newKind: 'Tipo de licor…', newKindNeed: 'Elige el tipo de licor.', newCode: 'Código',
     newSave: 'Dar de alta y contar', cancel: 'Cancelar', newNeed: 'Escribe el nombre del producto.', newSimilar: '¿Es alguno de estos? Tócalo para no repetirlo:',
     mods: { '': 'Todos', Latas: 'Latas', Barril: 'Barriles', Licor: 'Licor', Mixer: 'Mixers', Comida: 'Comida' },
     areas: {},
@@ -181,7 +181,7 @@ const T = {
     searchP: 'Search product', another: 'Scan another', ready: 'Done', learnFail: 'Could not save the code: ', noLib: 'The scanner is still loading; try again in a moment.', photo: 'Take a photo of the code', photoFail: 'Could not read the code in the photo. Try closer and with more light.',
     newBtn: '+ New product', notListed: 'Not on the list: add it', newTitle: 'Add a product',
     newSub: 'Type the name as it reads on the label. It gets added and you can count it right away.',
-    newName: 'Name (e.g. Stoli Crushed Mango)', newSize: 'Size (e.g. 750 ml, 1 L)', newType: 'Type', newCode: 'Code',
+    newName: 'Name (e.g. Stoli Crushed Mango)', newSize: 'Size (e.g. 750 ml, 1 L)', newType: 'Type', newKind: 'Liquor type…', newKindNeed: 'Pick the liquor type.', newCode: 'Code',
     newSave: 'Add and count', cancel: 'Cancel', newNeed: 'Type the product name.', newSimilar: 'Is it one of these? Tap it to avoid a duplicate:',
     mods: { '': 'All', Latas: 'Cans', Barril: 'Kegs', Licor: 'Liquor', Mixer: 'Mixers', Comida: 'Food' },
     areas: { 'Cuarto frío': 'Walk-in cooler', 'Barra': 'Bar', 'Cocina': 'Kitchen', 'Coolers': 'Coolers', 'Nuevos': 'New products', 'Más de Square': 'More from Square', 'Alta en la app': 'Added in the app' },
@@ -256,14 +256,21 @@ const CORRIGE = {
   'LIC-NMVR3RMH94': ['Comida', null, null], 'LIC-NMVR4EFMG4': ['Comida', 'Breakfast glaze (glaseado)', null],
   'LAT-NMVVBM1ETQ': [null, 'Excelsior Imperial Apple Pie (Cooler 3)', null],   // alta 30-oct como "apple"; LAT-127 es la Apple sola
   'LAT-127': [null, 'Excelsior Imperial Apple — sola, NO Apple Pie (Cooler 3)', null],
+  // nombres de barril como vienen en la factura de Finley/Hensley (31-oct; los de la hoja venían combinados de Square)
+  'GRIFO-03': [null, 'Michelob Ultra', null], 'GRIFO-06': [null, 'Dos Equis XX Lager', null],
+  'GRIFO-07': [null, 'Guinness Stout (nitro)', null], 'GRIFO-11': [null, 'Wren House Spellbinder Hazy', null],
+  'GRIFO-12': [null, 'The Shop Church Music', null], 'GRIFO-15': [null, 'Mother Road Tower Station IPA', null],
+  'GRIFO-20': [null, 'Mother Earth Cali Creamin Nitro', null], 'GRIFO-21': [null, 'Firestone Walker 805', null],
+  'GRIFO-22': [null, 'Stone Buenaveza Salt & Lime Lager', null], 'GRIFO-26': [null, 'Cali Squeeze Blood Orange', null],
+  'GRIFO-30': [null, null, 'Half Barrel (1/2 bbl)'], 'GRIFO-29': [null, 'Blue Moon Belgian White', null], 'GRIFO-31': [null, 'Pizza Port Chronic Amber Ale', null],
   // barriles dados de alta como licor el 30-oct
-  'LIC-NMVVDB4WPR': ['Barril', 'Dragoon IPA', null, 'barril lleno'], 'LIC-NMVVDCKNQI': ['Barril', 'Voodoo Ranger Juice Haze', null, 'barril lleno'],
-  'LIC-NMVVDE6DNJ': ['Barril', 'Fate', null, 'barril lleno'], 'LIC-NMVVDEZU7A': ['Barril', 'Stone Delicious', null, 'barril lleno'],
-  'LIC-NMVVDFSKR4': ['Barril', 'Tombstone', null, 'barril lleno'], 'LIC-NMVVDGMMKG': ['Barril', 'Dragoon American Wheat', null, 'barril lleno'],
-  'LIC-NMVVDHMNR3': ['Barril', 'Blake’s Imperial Strawberry Blush', null, 'barril lleno'], 'LIC-NMVVDIHNJG': ['Barril', 'Tivoli Outlaw Light', null, 'barril lleno'],
+  'LIC-NMVVDB4WPR': ['Barril', 'Dragoon IPA', null, 'barril lleno'], 'LIC-NMVVDCKNQI': ['Barril', 'Voodoo Ranger Juicy Haze IPA', null, 'barril lleno'],
+  'LIC-NMVVDE6DNJ': ['Barril', 'Fate Prince P', 'Importado 50 L', 'barril lleno'], 'LIC-NMVVDEZU7A': ['Barril', 'Stone Delicious IPA', null, 'barril lleno'],
+  'LIC-NMVVDFSKR4': ['Barril', 'Tombstone IPA', null, 'barril lleno'], 'LIC-NMVVDGMMKG': ['Barril', 'Dragoon American Wheat', null, 'barril lleno'],
+  'LIC-NMVVDHMNR3': ['Barril', 'Blake’s Imperial Strawberry', null, 'barril lleno'], 'LIC-NMVVDIHNJG': ['Barril', 'Tivoli Outlaw Mile Hi Light Lager', null, 'barril lleno'],
   'LIC-NMVVDJL8XO': ['Barril', 'Mother Road Limited Visibility', null, 'barril lleno'], 'LIC-NMVVDKXH3R': ['Barril', 'Mother Road Roadside', null, 'barril lleno'],
   'LIC-NMVVDLJAUJ': ['Barril', 'Mother Road Lost Highway', null, 'barril lleno'],
-  'LIC-NMVVIAMR8S': ['Barril', 'Schilling Hard Cider Chaider', null, 'barril lleno'],
+  'LIC-NMVVIAMR8S': ['Barril', 'Schilling Chaider Spiced Chai', null, 'barril lleno'],
   'LIC-NMVVBEYF6I': ['Latas', null, null],   // Soonhari fresa: las otras dos están en latas
   'LIC-0212': [null, 'Stoli Razberi (Raspberry) Vodka', null],
   'LIC-0185': [null, 'Barton Naturals Vodka, gluten free (WELL)', null],
@@ -693,6 +700,8 @@ function resultado(raw) {
 // Se guarda en este teléfono (cm_nuevos) hasta que la hoja Productos lo confirma; así se puede contar aunque no haya señal.
 const PREF = { Licor: 'LIC', Latas: 'LAT', Mixer: 'MIX', Comida: 'COM' };
 const UNIDAD = { Licor: 'botella', Latas: 'lata/botella', Mixer: 'botella', Comida: 'pieza' };
+// tipos de licor = categorías de Square/05; se guarda junto al tamaño ("750 ml · Vodka") para no cambiar la hoja Productos
+const TIPOS = [['Vodka', 'Vodka'], ['Tequila/Mezcal', 'Tequila / Mezcal'], ['Whiskey/Scotch', 'Whiskey / Bourbon / Scotch'], ['Rum', 'Ron (Rum)'], ['Gin', 'Gin'], ['Cordials', 'Licor / Cordial / Schnapps'], ['Brandy/Cognac', 'Brandy / Cognac'], ['Vermouth/Aperitivo', 'Vermut / Aperitivo'], ['Wine', 'Vino'], ['Otro', 'Otro']];
 function misNuevos() { try { return JSON.parse(ls.get('cm_nuevos') || '[]'); } catch (e) { return []; } }
 function guardarNuevos(a) { ls.set('cm_nuevos', JSON.stringify(a)); }
 function subirNuevos() {
@@ -711,6 +720,7 @@ function formNuevo(raw, nombre) {
     <input id="nv_nombre" type="text" placeholder="${esc(t('newName'))}" value="${esc(nombre || '')}" style="width:100%;margin-bottom:8px">
     <div class="row"><select id="nv_mod" aria-label="${esc(t('newType'))}">${Object.keys(PREF).map(m => `<option value="${m}"${m === mod ? ' selected' : ''}>${esc(modName(m))}</option>`).join('')}</select>
     <input id="nv_tam" type="text" placeholder="${esc(t('newSize'))}" style="flex:1"></div>
+    <select id="nv_tipo" style="width:100%;margin-top:8px"><option value="">${esc(t('newKind'))}</option>${TIPOS.map(([v, l]) => `<option value="${esc(v)}">${esc(l)}</option>`).join('')}</select>
     <div id="nv_msg"></div><div id="nv_sim"></div>
     <div class="sheetbtns"><button class="btn light" id="nv_cancel" style="border:1px solid var(--navy)">${esc(t('cancel'))}</button><button class="btn" id="nv_ok">${esc(t('newSave'))}</button></div>`);
   const parecidos = () => {
@@ -719,13 +729,17 @@ function formNuevo(raw, nombre) {
     $('nv_sim').innerHTML = vis.length ? `<p>${esc(t('newSimilar'))}</p>` + vis.map(p => `<button class="pick" data-id="${esc(p[0])}">${esc(p[3])}<small>${esc([modName(p[1]), p[4], p[0]].filter(Boolean).join(' · '))}</small></button>`).join('') : '';
     $('nv_sim').querySelectorAll('.pick').forEach(b => b.onclick = () => c ? aprender(c, b.dataset.id) : mostrar(b.dataset.id));
   };
+  const verTipo = () => { $('nv_tipo').hidden = $('nv_mod').value !== 'Licor'; };
+  $('nv_mod').onchange = verTipo; verTipo();
   $('nv_nombre').oninput = parecidos; parecidos(); $('nv_nombre').focus();
   $('nv_cancel').onclick = cerrarHoja;
   $('nv_ok').onclick = () => {
     const n = $('nv_nombre').value.trim().replace(/\s+/g, ' '), m = $('nv_mod').value;
     if (!n) { $('nv_msg').innerHTML = `<div class="msg err">${esc(t('newNeed'))}</div>`; return; }
+    const tipo = m === 'Licor' ? $('nv_tipo').value : '';
+    if (m === 'Licor' && !tipo) { $('nv_msg').innerHTML = `<div class="msg err">${esc(t('newKindNeed'))}</div>`; return; }
     const id = PREF[m] + '-N' + Date.now().toString(36).toUpperCase() + Math.floor(Math.random() * 36).toString(36).toUpperCase();
-    const p = [id, m, 'Alta en la app', n, $('nv_tam').value.trim(), UNIDAD[m]];
+    const p = [id, m, 'Alta en la app', n, [$('nv_tam').value.trim(), tipo].filter(Boolean).join(' · '), UNIDAD[m]];
     guardarNuevos(misNuevos().concat([{ p, codigo: c }]));
     S.productos.push(p);
     if (c) { (S.codigos[c] = S.codigos[c] || []).push(id); }
